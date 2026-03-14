@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Number Guessing Game</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Space+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#0a0a0f;
+  --card:#16161f;
+  --border:#ffffff0f;
+  --gold:#f5c842;
+  --teal:#00d4aa;
+  --rose:#ff6b8a;
+  --text:#e8e8f0;
+  --muted:#7a7a9a;
+}
+body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+
+.glow{position:fixed;width:500px;height:500px;background:radial-gradient(circle,rgba(245,200,66,0.07) 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;}
+
+.game-wrap{width:100%;max-width:480px;padding:24px;}
+
+.game-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:48px 40px;position:relative;overflow:hidden;}
+.game-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(to right,var(--gold),var(--teal),var(--rose));}
+
+.game-tag{display:inline-flex;align-items:center;gap:8px;background:rgba(245,200,66,0.1);border:1px solid rgba(245,200,66,0.25);padding:5px 14px;border-radius:100px;font-size:0.72rem;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;font-weight:600;margin-bottom:20px;}
+
+.game-title{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;margin-bottom:8px;color:var(--text);}
+.game-title span{color:var(--gold);}
+.game-sub{font-size:0.88rem;color:var(--muted);margin-bottom:32px;line-height:1.6;}
+
+.diff-label{font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:12px;}
+.diff-btns{display:flex;gap:10px;margin-bottom:28px;}
+.diff-btn{flex:1;padding:10px;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:8px;font-family:'Space Grotesk',sans-serif;font-size:0.78rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;}
+.diff-btn:hover{border-color:var(--gold);color:var(--gold);}
+.diff-btn.active{background:rgba(245,200,66,0.12);border-color:var(--gold);color:var(--gold);}
+
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:32px;}
+.stat-box{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;}
+.stat-val{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;color:var(--gold);}
+.stat-key{font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-top:4px;}
+
+.input-row{display:flex;gap:12px;margin-bottom:20px;}
+.guess-input{flex:1;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:14px 18px;font-family:'Space Grotesk',sans-serif;font-size:1.1rem;color:var(--text);outline:none;transition:border-color 0.2s;text-align:center;letter-spacing:0.1em;}
+.guess-input:focus{border-color:var(--gold);}
+.guess-input::placeholder{color:var(--muted);font-size:0.9rem;}
+.guess-btn{background:var(--gold);color:#0a0a0f;border:none;border-radius:10px;padding:14px 24px;font-family:'Syne',sans-serif;font-size:0.9rem;font-weight:800;cursor:pointer;transition:transform 0.15s,box-shadow 0.2s;white-space:nowrap;}
+.guess-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(245,200,66,0.3);}
+.guess-btn:active{transform:translateY(0);}
+.guess-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;box-shadow:none;}
+
+.feedback{min-height:56px;display:flex;align-items:center;justify-content:center;border-radius:10px;font-size:0.95rem;font-weight:600;margin-bottom:20px;padding:14px;text-align:center;transition:all 0.3s;}
+.feedback.hidden{opacity:0;}
+.feedback.too-high{background:rgba(255,107,138,0.1);border:1px solid rgba(255,107,138,0.25);color:var(--rose);}
+.feedback.too-low{background:rgba(0,212,170,0.1);border:1px solid rgba(0,212,170,0.25);color:var(--teal);}
+.feedback.correct{background:rgba(245,200,66,0.1);border:1px solid rgba(245,200,66,0.3);color:var(--gold);}
+.feedback.info{background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--muted);}
+
+.history-label{font-size:0.68rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:10px;}
+.history{display:flex;flex-wrap:wrap;gap:8px;min-height:36px;margin-bottom:24px;}
+.hist-tag{font-size:0.75rem;padding:5px 12px;border-radius:100px;font-weight:600;border:1px solid;}
+.hist-high{background:rgba(255,107,138,0.08);color:var(--rose);border-color:rgba(255,107,138,0.2);}
+.hist-low{background:rgba(0,212,170,0.08);color:var(--teal);border-color:rgba(0,212,170,0.2);}
+.hist-win{background:rgba(245,200,66,0.12);color:var(--gold);border-color:rgba(245,200,66,0.3);}
+
+.action-row{display:flex;gap:12px;}
+.reset-btn{flex:1;padding:13px;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:10px;font-family:'Space Grotesk',sans-serif;font-size:0.82rem;font-weight:600;cursor:pointer;transition:all 0.2s;letter-spacing:0.06em;text-transform:uppercase;}
+.reset-btn:hover{border-color:var(--gold);color:var(--gold);}
+.back-btn{flex:1;padding:13px;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:10px;font-family:'Space Grotesk',sans-serif;font-size:0.82rem;font-weight:600;cursor:pointer;transition:all 0.2s;letter-spacing:0.06em;text-transform:uppercase;text-decoration:none;display:flex;align-items:center;justify-content:center;}
+.back-btn:hover{border-color:var(--teal);color:var(--teal);}
+
+@keyframes pop{0%{transform:scale(0.8);opacity:0;}70%{transform:scale(1.05);}100%{transform:scale(1);opacity:1;}}
+.win-pop{animation:pop 0.4s ease forwards;}
+
+.progress-wrap{margin-bottom:24px;}
+.progress-label{display:flex;justify-content:space-between;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+.progress-bar{height:4px;background:rgba(255,255,255,0.05);border-radius:100px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(to right,var(--teal),var(--gold));border-radius:100px;transition:width 0.4s ease;}
+</style>
+</head>
+<body>
+<div class="glow"></div>
+
+<div class="game-wrap">
+  <div class="game-card" id="gameCard">
+    <div class="game-tag">🎮 Mini Project</div>
+    <h1 class="game-title">Number <span>Guesser</span></h1>
+    <p class="game-sub" id="gameSub">Pick a difficulty and guess the secret number!</p>
+
+    <div class="diff-label">Select Difficulty</div>
+    <div class="diff-btns">
+      <button class="diff-btn active" onclick="setDiff('easy')">Easy<br/><span style="font-size:0.65rem;opacity:0.7;">1–50 · 10 tries</span></button>
+      <button class="diff-btn" onclick="setDiff('medium')">Medium<br/><span style="font-size:0.65rem;opacity:0.7;">1–100 · 7 tries</span></button>
+      <button class="diff-btn" onclick="setDiff('hard')">Hard<br/><span style="font-size:0.65rem;opacity:0.7;">1–200 · 5 tries</span></button>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-val" id="attemptsLeft">10</div><div class="stat-key">Tries Left</div></div>
+      <div class="stat-box"><div class="stat-val" id="gamesWon">0</div><div class="stat-key">Won</div></div>
+      <div class="stat-box"><div class="stat-val" id="bestScore">—</div><div class="stat-key">Best</div></div>
+    </div>
+
+    <div class="progress-wrap">
+      <div class="progress-label"><span>Attempts Used</span><span id="progressTxt">0 / 10</span></div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    </div>
+
+    <div class="input-row">
+      <input class="guess-input" type="number" id="guessInput" placeholder="Enter your guess..." min="1"/>
+      <button class="guess-btn" id="guessBtn" onclick="makeGuess()">Guess →</button>
+    </div>
+
+    <div class="feedback hidden" id="feedback">Make your first guess!</div>
+
+    <div class="history-label">Guess History</div>
+    <div class="history" id="history"></div>
+
+    <div class="action-row">
+      <button class="reset-btn" onclick="resetGame()">↺ New Game</button>
+      <a class="back-btn" href="index.html">← Portfolio</a>
+    </div>
+  </div>
+</div>
+
+<script>
+const config = {
+  easy:   { max: 50,  tries: 10 },
+  medium: { max: 100, tries: 7  },
+  hard:   { max: 200, tries: 5  }
+};
+
+let diff = 'easy';
+let secret, maxTries, triesLeft, guesses, gameOver, gamesWon = 0, bestScore = Infinity;
+
+function setDiff(d) {
+  diff = d;
+  document.querySelectorAll('.diff-btn').forEach((b,i) => b.classList.toggle('active', ['easy','medium','hard'][i] === d));
+  resetGame();
+}
+
+function resetGame() {
+  const c = config[diff];
+  secret = Math.floor(Math.random() * c.max) + 1;
+  maxTries = c.tries;
+  triesLeft = c.tries;
+  guesses = [];
+  gameOver = false;
+
+  document.getElementById('guessInput').value = '';
+  document.getElementById('guessInput').disabled = false;
+  document.getElementById('guessBtn').disabled = false;
+  document.getElementById('history').innerHTML = '';
+  document.getElementById('attemptsLeft').textContent = triesLeft;
+  document.getElementById('gameSub').textContent = `Guess a number between 1 and ${c.max}`;
+  document.getElementById('progressFill').style.width = '0%';
+  document.getElementById('progressTxt').textContent = `0 / ${maxTries}`;
+
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback info';
+  fb.textContent = '🎯 Game started! Make your first guess.';
+  document.getElementById('guessInput').focus();
+}
+
+function makeGuess() {
+  if (gameOver) return;
+  const input = document.getElementById('guessInput');
+  const val = parseInt(input.value);
+  const c = config[diff];
+
+  if (isNaN(val) || val < 1 || val > c.max) {
+    showFeedback(`⚠️ Enter a number between 1 and ${c.max}`, 'info');
+    return;
+  }
+  if (guesses.includes(val)) {
+    showFeedback(`⚠️ You already guessed ${val}!`, 'info');
+    return;
+  }
+
+  guesses.push(val);
+  triesLeft--;
+  const used = maxTries - triesLeft;
+
+  document.getElementById('progressFill').style.width = (used / maxTries * 100) + '%';
+  document.getElementById('progressTxt').textContent = `${used} / ${maxTries}`;
+  document.getElementById('attemptsLeft').textContent = triesLeft;
+
+  const hist = document.getElementById('history');
+  const tag = document.createElement('span');
+  tag.className = 'hist-tag ' + (val === secret ? 'hist-win' : val > secret ? 'hist-high' : 'hist-low');
+  tag.textContent = val;
+  hist.appendChild(tag);
+
+  input.value = '';
+
+  if (val === secret) {
+    gamesWon++;
+    gameOver = true;
+    if (used < bestScore) bestScore = used;
+    document.getElementById('gamesWon').textContent = gamesWon;
+    document.getElementById('bestScore').textContent = bestScore;
+    document.getElementById('guessInput').disabled = true;
+    document.getElementById('guessBtn').disabled = true;
+    showFeedback(`🎉 Correct! It was ${secret}! You got it in ${used} tries!`, 'correct');
+    document.getElementById('gameCard').classList.add('win-pop');
+    setTimeout(() => document.getElementById('gameCard').classList.remove('win-pop'), 400);
+  } else if (triesLeft === 0) {
+    gameOver = true;
+    document.getElementById('guessInput').disabled = true;
+    document.getElementById('guessBtn').disabled = true;
+    showFeedback(`😢 Game Over! The number was ${secret}. Try again!`, 'too-high');
+  } else if (val > secret) {
+    showFeedback(`📉 Too High! Go lower. (${triesLeft} tries left)`, 'too-high');
+  } else {
+    showFeedback(`📈 Too Low! Go higher. (${triesLeft} tries left)`, 'too-low');
+  }
+  input.focus();
+}
+
+function showFeedback(msg, type) {
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback ' + type;
+  fb.textContent = msg;
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Enter') makeGuess(); });
+resetGame();
+</script>
+</body>
+</html>
